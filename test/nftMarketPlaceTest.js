@@ -14,7 +14,7 @@ describe(" Testing BlockHole NFT MArketplace ", function () {
 
   // deployment address
   it("Contract deployed at : ", async function () {
-    console.log("DEployment address : ", nftmarketplace.address);
+    console.log("Deployment address : ", nftmarketplace.address);
   });
 
   // getting name and symbol of the marketplace token
@@ -99,6 +99,7 @@ describe(" Testing BlockHole NFT MArketplace ", function () {
       await nftmarketplace.createNFT("ghi", 8);
       await nftmarketplace.createNFT("jkl", 9);
       await nftmarketplace.createNFT("mno", 6);
+      await nftmarketplace.createNFT("pqr", 5);
     });
     //checking price to be greater than 0
     it("Should check price to be more than 0 ", async function () {
@@ -110,7 +111,7 @@ describe(" Testing BlockHole NFT MArketplace ", function () {
     // checking if listing fee is passed or not
     it("Is listing fee passed or not ", async function () {
       await expect(
-        nftmarketplace.listNFT(1, ethers.utils.parseEther('0.1'), {
+        nftmarketplace.listNFT(1, ethers.utils.parseEther("0.1"), {
           value: ethers.utils.parseEther("0.001"),
         })
       ).to.be.revertedWith("Must be equal to listing price");
@@ -121,7 +122,9 @@ describe(" Testing BlockHole NFT MArketplace ", function () {
       await expect(
         nftmarketplace
           .connect(account2)
-          .listNFT(1, ethers.utils.parseEther('0.1'), { value: ethers.utils.parseEther("0.01") })
+          .listNFT(1, ethers.utils.parseEther("0.1"), {
+            value: ethers.utils.parseEther("0.01"),
+          })
       ).to.be.revertedWith("Only the owner of nft can sell his nft");
     });
 
@@ -137,17 +140,26 @@ describe(" Testing BlockHole NFT MArketplace ", function () {
         listNftStatus.events[1].args.sold
       );
       expect(listNftStatus.events[1].args.sold).to.be.equal(false);
+
+
     });
 
     //getting the balance in the NFT smart contract
     describe("Getting the balance in the NFT Marketplace contract : ", function () {
       it("Should get the Balance of the marketplace ", async function () {
-        await nftmarketplace.listNFT(2, ethers.utils.parseEther('2'), {
+        await nftmarketplace.listNFT(2, ethers.utils.parseEther("2"), {
           value: ethers.utils.parseEther("0.01"),
         });
-        await nftmarketplace.listNFT(3, ethers.utils.parseEther('2'), {
+        await nftmarketplace.listNFT(3, ethers.utils.parseEther("2"), {
           value: ethers.utils.parseEther("0.01"),
         });
+
+
+        // Fetching NFT creator 
+         console.log("NFT creator address : ", await nftmarketplace.fetchCreatorNft(2));
+        
+        // Fetching royality percentage from fetchRoyaltyPercentofNft function
+         console.log("Royality of NFT with token id 2  : ",  (await nftmarketplace.fetchRoyaltyPercentofNft(2)).toString());
 
         // checking contractBalance function
         const marketplaceContractBalance =
@@ -173,12 +185,83 @@ describe(" Testing BlockHole NFT MArketplace ", function () {
       it("Should check that only owner can withdraw commission in withdrawListingCommission function  ", async function () {
         await expect(
           nftmarketplace.connect(account1).withdrawListingCommission()
-        ).to.be.revertedWith("only owner of the marketplace can perform this action");
+        ).to.be.revertedWith(
+          "only owner of the marketplace can perform this action"
+        );
       });
 
+      
       // balance should be more than 0 to withdraw listing price
-      it("Amount should be more than 0 to withdraw ", async function(){
-        expect(nftmarketplace.withdrawListingCommission()).to.be.rejectedWith("Zero balance in the account.");
+      it("Amount should be more than 0 to withdraw ", async function () {
+        expect(nftmarketplace.withdrawListingCommission()).to.be.rejectedWith(
+          "Zero balance in the account."
+        );
+      });
+    });
+
+
+    describe("Testing ", function(){
+        it("Get all unsold NFTs ", async function(){
+        
+          await nftmarketplace.listNFT(2, ethers.utils.parseEther("2"), {
+            value: ethers.utils.parseEther("0.01"),
+          });
+          await nftmarketplace.listNFT(3, ethers.utils.parseEther("2"), {
+            value: ethers.utils.parseEther("0.01"),
+          });
+          await nftmarketplace.listNFT(4, ethers.utils.parseEther("0.4"), {
+            value: ethers.utils.parseEther("0.01"),
+          });
+          await nftmarketplace.listNFT(5, ethers.utils.parseEther("0.7"), {
+            value: ethers.utils.parseEther("0.01"),
+          });
+
+         await nftmarketplace.buyNFT(2, {value: ethers.utils.parseEther('2')});
+          await nftmarketplace.buyNFT(3, {value: ethers.utils.parseEther('2')});
+
+
+          // checking fetchAllUnsoldNFTs function
+          const unsoldNFTs =  await nftmarketplace.fetchAllUnsoldNFTs();
+          console.log("Unsold NFTS : ",  await unsoldNFTs.length);
+          var i ;
+          for(i=0; i< unsoldNFTs.length; i++){
+            console.log("Unsold NFT token id -", (unsoldNFTs[i].tokenId.toString()));
+          }
+
+          //checking fetchMyNFTs function
+          const fetchMyNFT = await nftmarketplace.fetchMyNFTs();
+          console.log("Total number of my NFT : ", await fetchMyNFT.length);
+          for( var i =0; i< fetchMyNFT.length; i++){
+            console.log("My NFT Token Id :", ( await fetchMyNFT[i].tokenId.toString()));
+          }
+
+
+          //checking fetchMyListedNFTs function
+          const myListedNft =  await nftmarketplace.fetchMyListedNFTs();
+          console.log("My Listed NFTs : ", await myListedNft.length);
+          for(var i=0 ; i<myListedNft.length ; i++)
+          {
+            console.log("My Listed Nft Token ids : ",( myListedNft[i].tokenId).toString());
+          }
+
+
+          
+        });
+
+
+        
+    });
+
+    describe(" Testing update listing price ", function () {
+      it("Checking updateNftPrice function ", async function () {
+        await nftmarketplace.listNFT(3, ethers.utils.parseEther("0.4"), {
+          value: ethers.utils.parseEther("0.01"),
+        });
+        await expect(
+          nftmarketplace
+            .connect(account1)
+            .updateNftPrice(3, ethers.utils.parseEther("0.5"))
+        ).to.be.revertedWith("Only the seller can update price of NFT");
       });
     });
   });
@@ -187,7 +270,7 @@ describe(" Testing BlockHole NFT MArketplace ", function () {
   describe(" Testing cancelListing function ", function () {
     it("Should check only seller can cancel the listing ", async function () {
       await nftmarketplace.createNFT("abc", 8);
-      await nftmarketplace.listNFT(1, ethers.utils.parseEther('1'), {
+      await nftmarketplace.listNFT(1, ethers.utils.parseEther("1"), {
         value: ethers.utils.parseEther("0.01"),
       });
       const cancelListingToken = await nftmarketplace.cancelListing(1);

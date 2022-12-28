@@ -143,6 +143,16 @@ contract NFTMarketplace is ERC721URIStorage {
         );
     }
 
+    //tested
+    function updateNftPrice(uint256 tokenId, uint256 price) external {
+        require(
+            idToNFTItemMarketSpecs[tokenId].seller == msg.sender,
+            "Only the seller can update price of NFT"
+        );
+        idToNFTItemMarketSpecs[tokenId].price = price;
+    }
+
+
    
 //tested
     function cancelListing(uint256 tokenId) external {
@@ -164,7 +174,7 @@ contract NFTMarketplace is ERC721URIStorage {
             msg.sender
         );
     }
-
+//tested
     function buyNFT(uint256 tokenId) external payable {
         uint256 price = idToNFTItemMarketSpecs[tokenId].price;
         address seller = idToNFTItemMarketSpecs[tokenId].seller;
@@ -207,6 +217,16 @@ contract NFTMarketplace is ERC721URIStorage {
         return address(this).balance;
     }
 
+// tested
+      function fetchCreatorNft(uint tokenId) public view returns (address) {
+        return idToNFTItemMarketSpecs[tokenId].creator;
+    }
+//tested
+      function fetchRoyaltyPercentofNft(uint tokenId) public view returns (uint) {
+        return idToNFTItemMarketSpecs[tokenId].royaltyPercent;
+    }
+
+//tested
     function fetchAllUnsoldNFTs()
         public
         view
@@ -231,7 +251,7 @@ contract NFTMarketplace is ERC721URIStorage {
         }
         return items;
     }
-
+//tested
     function fetchMyNFTs() public view returns (NFTItemMarketSpecs[] memory) {
         uint256 totalItemCount = _tokenIds.current();
         uint256 itemCount = 0;
@@ -256,7 +276,7 @@ contract NFTMarketplace is ERC721URIStorage {
         }
         return items;
     }
-
+//tested
     function fetchMyListedNFTs()
         external
         view
